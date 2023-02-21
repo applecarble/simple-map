@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<title>Add a polygon to a map using a GeoJSON source</title>
+	<meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+	<link href="https://api.mapbox.com/mapbox-gl-js/v2.13.0/mapbox-gl.css" rel="stylesheet">
+	<script src="https://api.mapbox.com/mapbox-gl-js/v2.13.0/mapbox-gl.js"></script>
+	<style>
+		body {
+			margin: 0;
+			padding: 0;
+		}
+
+		#map {
+			position: absolute;
+			top: 0;
+			bottom: 0;
+			width: 100%;
+		}
+	</style>
+</head>
+
+<body>
+	<div id="map"></div>
+	<script>
+		var urlParams = {};
+		mapboxgl.accessToken = 'pk.eyJ1IjoiYW5kcmV5LWNhcmJsZSIsImEiOiJjbGVkZHU5NmUwNXptM3BtamdjZmRwaHZ2In0.Q_FLVdA0B0QJM-GNxXpTGQ';
+
+		let geoObject = {
+			"type": "Feature",
+			"geometry": {
+				"type": "Polygon",
+				"coordinates": [
+					[]
+				]
+			},
+			"properties": {
+				"stroke": "#C5FCDB",
+				"stroke-width": 2,
+				"stroke-opacity": 1,
+				"fill": "#C5FCDB",
+				"fill-opacity": 0.5
+			}
+		}
+		let centerCoords = [38.8144697, 5.7044516]
+
+		const params = new URLSearchParams(window.location.search);
+		if (params.has('polygon') ) {
+			console.log('polygon');
+
+			let polygon = params.get('polygon');
+			console.log(polygon);
+
+			let coords = [];
+			let vertices = polygon.split(";");
+			vertices.forEach((vertice) => {
+				let point = vertice.split(' ');
+				if (point[0]) {
+					geoObject.geometry.coordinates[0].push([parseFloat(point[1]), parseFloat(point[0])]);
+				}
+
+			});
+			console.log(geoObject);
+
+			let centerPoint = parseInt(geoObject.geometry.coordinates[0].length/2);
+			centerCoords = geoObject.geometry.coordinates[0][centerPoint];
+		}
+		else{
+			console.log('no polygon');
+		}
+
+		const map = new mapboxgl.Map({
+			container: 'map', // container ID
+			// Choose from Mapbox's core styles, or make your own style with Mapbox Studio
+			style: 'mapbox://styles/mapbox/satellite-v9', // style URL
+			center:  centerCoords, // starting position
+			zoom: 16 // starting zoom
+		});
+
+		map.on('load', () => {
+			// Add a data source containing GeoJSON data.
+			map.addSource('maine', {
+				'type': 'geojson',
+				'data': geoObject
+			});
+
+			// Add a new layer to visualize the polygon.
+			map.addLayer({
+				'id': 'maine',
+				'type': 'fill',
+				'source': 'maine', // reference the data source
+				'layout': {},
+				'paint': {
+					'fill-color': '#2cba00', // blue color fill
+					'fill-opacity': 0.5
+				}
+			});
+			// Add a black outline around the polygon.
+			map.addLayer({
+				'id': 'outline',
+				'type': 'line',
+				'source': 'maine',
+				'layout': {},
+				'paint': {
+					'line-color': '#2cba00',
+					'line-width': 3
+				}
+			});
+		});
+	</script>
+
+</body>
+
+</html>
